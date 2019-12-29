@@ -41,9 +41,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BankBranch.cs" />
+    <Compile Include="Configuration.cs" />
     <Compile Include="Enums.cs" />
     <Compile Include="GuestRequest.cs" />
+    <Compile Include="Host.cs" />
+    <Compile Include="HostingUnit.cs" />
+    <Compile Include="Order.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Utilities\Utilities.csproj">
+      <Project>{0452783e-1712-4303-b6f0-ac9e75d42bf9}</Project>
+      <Name>Utilities</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
