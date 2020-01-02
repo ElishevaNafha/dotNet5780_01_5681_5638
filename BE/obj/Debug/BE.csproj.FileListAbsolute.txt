@@ -1,0 +1,8 @@
+C:\Users\User\Desktop\מדעי המחשב\כיתה יב\סמסטר א\מיני פרויקט במערכת חלונות\הפרויקט\dotNet5780_project01_5681_5638\BE\bin\Debug\BE.dll
+C:\Users\User\Desktop\מדעי המחשב\כיתה יב\סמסטר א\מיני פרויקט במערכת חלונות\הפרויקט\dotNet5780_project01_5681_5638\BE\bin\Debug\BE.pdb
+C:\Users\User\Desktop\מדעי המחשב\כיתה יב\סמסטר א\מיני פרויקט במערכת חלונות\הפרויקט\dotNet5780_project01_5681_5638\BE\bin\Debug\Utilities.dll
+C:\Users\User\Desktop\מדעי המחשב\כיתה יב\סמסטר א\מיני פרויקט במערכת חלונות\הפרויקט\dotNet5780_project01_5681_5638\BE\bin\Debug\Utilities.pdb
+C:\Users\User\Desktop\מדעי המחשב\כיתה יב\סמסטר א\מיני פרויקט במערכת חלונות\הפרויקט\dotNet5780_project01_5681_5638\BE\obj\Debug\BE.csprojAssemblyReference.cache
+C:\Users\User\Desktop\מדעי המחשב\כיתה יב\סמסטר א\מיני פרויקט במערכת חלונות\הפרויקט\dotNet5780_project01_5681_5638\BE\obj\Debug\BE.csproj.CopyComplete
+C:\Users\User\Desktop\מדעי המחשב\כיתה יב\סמסטר א\מיני פרויקט במערכת חלונות\הפרויקט\dotNet5780_project01_5681_5638\BE\obj\Debug\BE.dll
+C:\Users\User\Desktop\מדעי המחשב\כיתה יב\סמסטר א\מיני פרויקט במערכת חלונות\הפרויקט\dotNet5780_project01_5681_5638\BE\obj\Debug\BE.pdb

@@ -1,0 +1,5 @@
+C:\Users\User\Desktop\מדעי המחשב\כיתה יב\סמסטר א\מיני פרויקט במערכת חלונות\הפרויקט\dotNet5780_project01_5681_5638\BE\ConsoleApp1\bin\Debug\ConsoleApp1.exe.config
+C:\Users\User\Desktop\מדעי המחשב\כיתה יב\סמסטר א\מיני פרויקט במערכת חלונות\הפרויקט\dotNet5780_project01_5681_5638\BE\ConsoleApp1\bin\Debug\ConsoleApp1.exe
+C:\Users\User\Desktop\מדעי המחשב\כיתה יב\סמסטר א\מיני פרויקט במערכת חלונות\הפרויקט\dotNet5780_project01_5681_5638\BE\ConsoleApp1\bin\Debug\ConsoleApp1.pdb
+C:\Users\User\Desktop\מדעי המחשב\כיתה יב\סמסטר א\מיני פרויקט במערכת חלונות\הפרויקט\dotNet5780_project01_5681_5638\BE\ConsoleApp1\obj\Debug\ConsoleApp1.exe
+C:\Users\User\Desktop\מדעי המחשב\כיתה יב\סמסטר א\מיני פרויקט במערכת חלונות\הפרויקט\dotNet5780_project01_5681_5638\BE\ConsoleApp1\obj\Debug\ConsoleApp1.pdb

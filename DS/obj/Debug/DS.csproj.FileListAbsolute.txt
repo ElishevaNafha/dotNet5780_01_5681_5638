@@ -1,0 +1,10 @@
+C:\Users\User\Desktop\מדעי המחשב\כיתה יב\סמסטר א\מיני פרויקט במערכת חלונות\הפרויקט\dotNet5780_project01_5681_5638\DS\bin\Debug\DS.dll
+C:\Users\User\Desktop\מדעי המחשב\כיתה יב\סמסטר א\מיני פרויקט במערכת חלונות\הפרויקט\dotNet5780_project01_5681_5638\DS\bin\Debug\DS.pdb
+C:\Users\User\Desktop\מדעי המחשב\כיתה יב\סמסטר א\מיני פרויקט במערכת חלונות\הפרויקט\dotNet5780_project01_5681_5638\DS\bin\Debug\BE.dll
+C:\Users\User\Desktop\מדעי המחשב\כיתה יב\סמסטר א\מיני פרויקט במערכת חלונות\הפרויקט\dotNet5780_project01_5681_5638\DS\bin\Debug\Utilities.dll
+C:\Users\User\Desktop\מדעי המחשב\כיתה יב\סמסטר א\מיני פרויקט במערכת חלונות\הפרויקט\dotNet5780_project01_5681_5638\DS\bin\Debug\BE.pdb
+C:\Users\User\Desktop\מדעי המחשב\כיתה יב\סמסטר א\מיני פרויקט במערכת חלונות\הפרויקט\dotNet5780_project01_5681_5638\DS\bin\Debug\Utilities.pdb
+C:\Users\User\Desktop\מדעי המחשב\כיתה יב\סמסטר א\מיני פרויקט במערכת חלונות\הפרויקט\dotNet5780_project01_5681_5638\DS\obj\Debug\DS.csprojAssemblyReference.cache
+C:\Users\User\Desktop\מדעי המחשב\כיתה יב\סמסטר א\מיני פרויקט במערכת חלונות\הפרויקט\dotNet5780_project01_5681_5638\DS\obj\Debug\DS.csproj.CopyComplete
+C:\Users\User\Desktop\מדעי המחשב\כיתה יב\סמסטר א\מיני פרויקט במערכת חלונות\הפרויקט\dotNet5780_project01_5681_5638\DS\obj\Debug\DS.dll
+C:\Users\User\Desktop\מדעי המחשב\כיתה יב\סמסטר א\מיני פרויקט במערכת חלונות\הפרויקט\dotNet5780_project01_5681_5638\DS\obj\Debug\DS.pdb

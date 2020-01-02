@@ -1,0 +1,5 @@
+C:\Users\User\Desktop\מדעי המחשב\כיתה יב\סמסטר א\מיני פרויקט במערכת חלונות\הפרויקט\dotNet5780_project01_5681_5638\Utilities\bin\Debug\Utilities.dll
+C:\Users\User\Desktop\מדעי המחשב\כיתה יב\סמסטר א\מיני פרויקט במערכת חלונות\הפרויקט\dotNet5780_project01_5681_5638\Utilities\bin\Debug\Utilities.pdb
+C:\Users\User\Desktop\מדעי המחשב\כיתה יב\סמסטר א\מיני פרויקט במערכת חלונות\הפרויקט\dotNet5780_project01_5681_5638\Utilities\obj\Debug\Utilities.csprojAssemblyReference.cache
+C:\Users\User\Desktop\מדעי המחשב\כיתה יב\סמסטר א\מיני פרויקט במערכת חלונות\הפרויקט\dotNet5780_project01_5681_5638\Utilities\obj\Debug\Utilities.dll
+C:\Users\User\Desktop\מדעי המחשב\כיתה יב\סמסטר א\מיני פרויקט במערכת חלונות\הפרויקט\dotNet5780_project01_5681_5638\Utilities\obj\Debug\Utilities.pdb
