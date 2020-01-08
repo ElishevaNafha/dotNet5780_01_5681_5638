@@ -7,20 +7,20 @@ namespace DAL
     public interface IDAL
     { 
         #region Guest Request methods
-        bool AddGuestRequest(GuestRequest request);
+        int AddGuestRequest(GuestRequest request);
         bool UpdateRequest(GuestRequest request, Status newStatus);
         List<GuestRequest> GetGuestRequests();
         #endregion
 
         #region Hosting Unit methods
-        bool AddHostingUnit(HostingUnit unit);
+        int AddHostingUnit(HostingUnit unit);
         bool DeleteHostingUnit(HostingUnit unit);
         bool UpdateHostingUnit(HostingUnit unit, HostingUnit newUnit);
         List<HostingUnit> GetHostingUnits();
         #endregion
 
         #region Order methods
-        bool AddOrder(Order order);
+        int AddOrder(Order order);
         bool UpdateOrder(Order order, Status newStatus);
         List<Order> GetOrders();
         #endregion

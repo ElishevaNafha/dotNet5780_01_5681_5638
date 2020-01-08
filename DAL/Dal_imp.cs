@@ -9,25 +9,19 @@ using DS;
 
 namespace DAL
 {
-    //NEEDS TO BE FULLY IMPLEMENTED
-    //THINGS TO REMEMBER: we must use linq at least 4 times, in different ways.
-    // required: check whether a key already exists in all addition functions.
-    //get functions will return a copy of the list and not the list itself.
-    public class Dal_imp : IDAL
+    internal class Dal_imp : IDAL
     {
         #region Guest Request methods
-        public bool AddGuestRequest(GuestRequest request)
+        public int AddGuestRequest(GuestRequest request)
         {
-            request.GuestRequestKey = Configuration.generateKey(request);
             var rqst = (from r in DataSource.GuestRequestsList
                         where r.GuestRequestKey == request.GuestRequestKey
                         select r).FirstOrDefault();
-            if (rqst == null)
-            {
-                DataSource.GuestRequestsList.Add(request);
-                return true;
-            }
-            return false;
+            if (rqst != null)
+                throw new ArgumentException("DAL: guest request already exists in the system");
+            request.GuestRequestKey = Configuration.GenerateKey(request);
+            DataSource.GuestRequestsList.Add(request.Clone());
+            return request.GuestRequestKey;
         }
         public bool UpdateRequest(GuestRequest request, Status newStatus)
         {
@@ -44,42 +38,23 @@ namespace DAL
         public List<GuestRequest> GetGuestRequests()
         {
             var requests = from gr in DataSource.GuestRequestsList
-                           select new GuestRequest() //we would use a clone function, but we were instructed to use select new.
-                           {
-                               GuestRequestKey = gr.GuestRequestKey,
-                               PrivateName = gr.PrivateName,
-                               FamilyName = gr.FamilyName,
-                               MailAddress = gr.MailAddress,
-                               Status = gr.Status,
-                               RegistrationDate = gr.RegistrationDate,
-                               EntryDate = gr.EntryDate,
-                               ReleaseDate = gr.ReleaseDate,
-                               Area = gr.Area,
-                               SubArea = gr.SubArea,
-                               HostingType = gr.HostingType,
-                               Adults = gr.Adults,
-                               Children = gr.Children,
-                               Pool = gr.Pool,
-                               Jacuzzi = gr.Jacuzzi,
-                               Garden = gr.Garden,
-                               Wifi = gr.Wifi,
-                               Parking = gr.Parking,
-                               ChildrensAttractions = gr.ChildrensAttractions
-                           };
+                           select gr.Clone();
             return requests.ToList();
         }
         #endregion
 
         #region Hosting Unit methods
-        public bool AddHostingUnit(HostingUnit unit)
+        public int AddHostingUnit(HostingUnit unit)
         {
-            if (unit.HostingUnitKey != 0)
-            {
-                return false;
-            }
-            unit.HostingUnitKey = Configuration.generateKey(unit);
-            DataSource.HostingUnitsList.Add(unit);
-            return true;
+            var unt = (from u in DataSource.HostingUnitsList
+                       where u.HostingUnitKey == unit.HostingUnitKey
+                       select u).FirstOrDefault();
+
+            if (unt != null)
+                throw new ArgumentException("DAL: hosting unit already exists in the system");
+            unit.HostingUnitKey = Configuration.GenerateKey(unit);
+            DataSource.HostingUnitsList.Add(unit.Clone());
+            return unit.HostingUnitKey;
         }
         public bool DeleteHostingUnit(HostingUnit unit)
         {
@@ -100,19 +75,8 @@ namespace DAL
                        select hu).FirstOrDefault();
             if (unt != null)
             {
-                //we didn't update the key because we assumed the unit stays the same unit
-                unt.Owner = newUnit.Owner;
-                unt.HostingUnitName = newUnit.HostingUnitName;
-                unt.Area = newUnit.Area;
-                unt.SubArea = newUnit.SubArea;
-                unt.Pool = newUnit.Pool;
-                unt.Jacuzzi = newUnit.Jacuzzi;
-                unt.Garden = newUnit.Garden;
-                unt.ChildrensAttractions = newUnit.ChildrensAttractions;
-                unt.Wifi = newUnit.Wifi;
-                unt.Parking = newUnit.Parking;
-                unt.PicturesUris = newUnit.PicturesUris;
-                unt.Diary = newUnit.Diary;
+                unt.Copy(newUnit);
+
                 return true;
             }
             return false;
@@ -120,39 +84,23 @@ namespace DAL
         public List<HostingUnit> GetHostingUnits()
         {
             var units = from hu in DataSource.HostingUnitsList
-                        select new HostingUnit() //we would use a clone function, but we were instructed to use select new.
-                        {
-                            HostingUnitKey = hu.HostingUnitKey,
-                            Owner = hu.Owner,
-                            HostingUnitName = hu.HostingUnitName,
-                            Area = hu.Area,
-                            SubArea = hu.SubArea,
-                            Pool = hu.Pool,
-                            Jacuzzi = hu.Jacuzzi,
-                            Garden = hu.Garden,
-                            ChildrensAttractions = hu.ChildrensAttractions,
-                            Wifi = hu.Wifi,
-                            Parking = hu.Parking,
-                            PicturesUris = hu.PicturesUris,
-                            Diary = hu.Diary,
-                        };
+                        select hu.Clone();
             return units.ToList();
         }
         #endregion
 
         #region Order methods
-        public bool AddOrder(Order order)
+       
+        public int AddOrder(Order order)
         {
-            order.OrderKey = Configuration.generateKey(order);
             var ordr = (from o in DataSource.OrdersList
                         where o.OrderKey == order.OrderKey
                         select o).FirstOrDefault();
-            if (ordr == null)
-            {
-                DataSource.OrdersList.Add(order);
-                return true;
-            }
-            return false;
+            if (ordr != null)
+                throw new ArgumentException("DAL: order already exists in the system");
+            order.OrderKey = Configuration.GenerateKey(order);
+            DataSource.OrdersList.Add(order.Clone());
+            return order.OrderKey;
         }
         public bool UpdateOrder(Order order, Status newStatus)
         {
@@ -169,15 +117,7 @@ namespace DAL
         public List<Order> GetOrders()
         {
             var orders = from o in DataSource.OrdersList
-                         select new Order() //we would use a clone function, but we were instructed to use select new.
-                         {
-                             HostingUnitKey = o.HostingUnitKey,
-                             GuestRequestKey = o.GuestRequestKey,
-                             OrderKey = o.OrderKey,
-                             Status = o.Status,
-                             CreateDate = o.CreateDate,
-                             OrderDate = o.OrderDate
-                         };
+                         select o.Clone();
             return orders.ToList();
         }
 
@@ -229,7 +169,10 @@ namespace DAL
                     BranchCity = "city5"
                 }
             };
-            return bbList;
+            var bankBranches = from bb in bbList
+                               let branch = bb // We were instructed to use let :)
+                               select branch.Clone();
+            return bankBranches.ToList();
         }
         #endregion
    }

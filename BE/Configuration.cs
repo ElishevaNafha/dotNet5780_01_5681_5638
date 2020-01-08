@@ -6,24 +6,31 @@ using System.Threading.Tasks;
 
 namespace BE
 {
-    public class Configuration
+    //MOVE TO BL?
+    public static class Configuration
     {
-        public static int serialGuestRequest = 10000000;
-        public static int serialHostingUnit = 10000000;
-        public static int serialOrder = 10000000;
+        private static int serialGuestRequest = 10000000;
+        private static int serialHostingUnit = 10000000;
+        private static int serialOrder = 10000000;
         
         public static float Commission = 10;
         public static float TotalCommissionProfits = 0;
-        public static int generateKey(object obj)
+
+        private static Dictionary<int, DateTime> lastDiaryUpdate = new Dictionary<int, DateTime>();
+        public static int GenerateKey(object obj)
         {
             if (obj is GuestRequest)
                 return serialGuestRequest++;
-            if (obj is HostingUnit)
+            else if (obj is HostingUnit)
                 return serialHostingUnit++;
-            if (obj is Order)
+            else if (obj is Order)
                 return serialOrder++;
             else
                 throw new ArgumentException("Invalid object type");
         }
+        public static void AddLastUpdateDate(int key) { lastDiaryUpdate.Add(key, DateTime.Now); }
+        public static void RemoveLastUpdateDate(int key) { lastDiaryUpdate.Remove(key); }
+        public static DateTime GetLastUpdateDate(int key) { return lastDiaryUpdate[key]; }
+        public static void UpdateLastUpdateDate(int key) { lastDiaryUpdate[key] = DateTime.Now; }
     }
 }

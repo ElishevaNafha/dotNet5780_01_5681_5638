@@ -11,16 +11,7 @@ namespace BE
 {
     public class HostingUnit
     {
-        private int hostingUnitKey;
-        public int HostingUnitKey 
-        {
-            get { return hostingUnitKey; }
-            set 
-            {
-                if (hostingUnitKey == 0)
-                    hostingUnitKey = Configuration.serialHostingUnit++;
-            }
-        }
+        public int HostingUnitKey { get; set; }
         public Host Owner { get; set; }
         public String HostingUnitName { get; set; }
         private Area area;

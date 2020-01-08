@@ -9,305 +9,259 @@ using DAL;
 
 namespace BL
 {
-    class BL_imp : IBL
+    internal class BL_imp : IBL
     {
-        static IDAL Dal = FactorySingletonDal.Instance;
+        static readonly IDAL Dal = FactorySingletonDal.Instance;
 
         #region Guest Request methods
-        public void AddGuestRequest(String privateName, String familyName, String mailAddress, DateTime entryDate, DateTime releaseDate, Area area, String subArea, HostingType hostingType, int adults, int children, Requirements pool, Requirements jacuzzi, Requirements garden, Requirements childrensAttractions, Requirements wifi, Requirements parking)
+
+        public int AddGuestRequest(GuestRequest guestRequest)
         {
-            try
-            {
-                GuestRequest request = new GuestRequest()
-                {
-                    PrivateName = privateName,
-                    FamilyName = familyName,
-                    MailAddress = mailAddress,
-                    Status = Status.NotYetApproved,
-                    RegistrationDate = DateTime.Now.Date,
-                    EntryDate = entryDate,
-                    ReleaseDate = releaseDate,
-                    Area = area,
-                    SubArea = subArea,
-                    HostingType = hostingType,
-                    Adults = adults,
-                    Children = children,
-                    Pool = pool,
-                    Jacuzzi = jacuzzi,
-                    Garden = garden,
-                    ChildrensAttractions = childrensAttractions,
-                    Wifi = wifi,
-                    Parking = parking
-                };
-                if (!Dal.AddGuestRequest(request))
-                    throw new ArgumentException("Guest Request Already exists in the system");
-            }
-            catch (ArgumentException x)
-            {
-                throw x;
-            }
+            if (guestRequest.GuestRequestKey != 0)
+                throw new ArgumentException("BL: new guest request can't have an initialized key");
+            guestRequest.RegistrationDate = DateTime.Now;
+            return Dal.AddGuestRequest(guestRequest);
         }
         public List<GuestRequest> GetGuestRequests()
         {
             return Dal.GetGuestRequests();
         }
-        private GuestRequest GetGuestRequestFromKey(int key)
+        public GuestRequest GetGuestRequestFromKey(int key)
         {
-            var guestRequests = Dal.GetGuestRequests();
-            var request = (from gr in guestRequests
-                           where gr.GuestRequestKey == key
-                           select gr).FirstOrDefault();
-            if (request == null)
-                throw new ArgumentException("there is no guest request with the requested key");
-            return request;
+            try
+            {
+                GuestRequest request = Dal.GetGuestRequests().Where(gr => gr.GuestRequestKey == key).SingleOrDefault();
+                if (request == null)
+                    throw new ArgumentException("BL: there is no guest request with the requested key");
+                return request;
+            }
+            catch (ArgumentException x)
+            {
+                throw x;
+            }
+            catch (InvalidOperationException x)
+            {
+                throw x;
+            }
         }
+
         #endregion
 
         #region Hosting Unit methods
-        /// <summary>
-        /// Adds a new hosting unit to a new host - and meanwhile creates the host himself 
-        /// </summary>
-        /// <param name="hostingUnitName"></param>
-        /// <param name="hostKey"></param>
-        /// <param name="privateName"></param>
-        /// <param name="familyName"></param>
-        /// <param name="phoneNumber"></param>
-        /// <param name="mailAddress"></param>
-        /// <param name="bankBranchDetails"></param>
-        /// <param name="bankAccountNumber"></param>
-        /// <param name="collectionClearance">approves withdrawing money from his bank account</param>
-        /// <returns></returns>
-        public void AddHostingUnit(String hostingUnitName, Area area, String subArea, bool pool, bool jacuzzi, bool garden, bool childrensAttractions, bool wifi, bool parking, List<String> picturesUris, String hostKey, String privateName, String familyName, String phoneNumber, String mailAddress, BankBranch bankBranchDetails, String bankAccountNumber, bool collectionClearance, String password)
+
+        public int AddHostingUnit(HostingUnit hostingUnit, Host host)
         {
             try
             {
-                HostingUnit unit = new HostingUnit()
-                {
-                    Owner = new Host()
-                    {
-                        HostKey = hostKey,
-                        PrivateName = privateName,
-                        FamilyName = familyName,
-                        PhoneNumber = phoneNumber,
-                        MailAddress = mailAddress,
-                        BankBranchDetails = bankBranchDetails,
-                        BankAccountNumber = bankAccountNumber,
-                        CollectionClearance = collectionClearance,
-                        Password = password,
-                        NumHostingUnits = 1,
-                        HostingUnitsKeys = new List<int>()
-                    },
-                    HostingUnitName = hostingUnitName,
-                    Area = area,
-                    SubArea = subArea,
-                    Pool = pool,
-                    Jacuzzi = jacuzzi,
-                    Garden = garden,
-                    ChildrensAttractions = childrensAttractions,
-                    Wifi = wifi,
-                    Parking = parking,
-                    PicturesUris = picturesUris,
-                    Diary = new bool[31,12] //all false by default
-                };
-                bool success = Dal.AddHostingUnit(unit);
-                if (!success)
-                    throw new ArgumentException("Hosting unit Already exists in the system");
-                unit.Owner.HostingUnitsKeys.Add(unit.HostingUnitKey); //done later because before it key is not yet generated
+                if (hostingUnit.HostingUnitKey != 0)
+                    throw new ArgumentException("BL: new hosting unit can't have an initialized key");
+                if ((host.NumHostingUnits != 0) || (host.HostingUnitsKeys != null))
+                    throw new ArgumentException("BL: A new host should have 0 hosting units");
+                if (hostingUnit.Diary != null)
+                    throw new ArgumentException("BL: new hosting unit can't have an initialized diary");
+
+                hostingUnit.Diary = new bool[31, 12]; //all false by default
+                hostingUnit.PicturesUris = new List<string>();
+                hostingUnit.Owner = host;
+                int key = Dal.AddHostingUnit(hostingUnit);
+
+                //update host's hosting units' details
+                hostingUnit.Owner.NumHostingUnits = 1;
+                hostingUnit.Owner.HostingUnitsKeys = new List<int>();
+                hostingUnit.Owner.HostingUnitsKeys.Add(key);
+                FullUpdateHostingUnit(hostingUnit, hostingUnit);
+
+                Configuration.AddLastUpdateDate(key);
+
+                return key;
             }
             catch (ArgumentException x)
             {
                 throw x;
             }
         }
-        
-        /// <summary>
-        /// adds a new hosting unit to an existing host
-        /// </summary>
-        /// <param name="hostingUnitName"></param>
-        /// <param name="area"></param>
-        /// <param name="subArea"></param>
-        /// <param name="pool"></param>
-        /// <param name="jacuzzi"></param>
-        /// <param name="garden"></param>
-        /// <param name="childrensAttractions"></param>
-        /// <param name="wifi"></param>
-        /// <param name="parking"></param>
-        /// <param name="picturesUris"></param>
-        /// <param name="owner"></param>
-        public void AddHostingUnit(string hostingUnitName, Area area, String subArea, bool pool, bool jacuzzi, bool garden, bool childrensAttractions, bool wifi, bool parking, List<String> picturesUris, Host owner)
+        public int AddHostingUnit(HostingUnit hostingUnit)
         {
             try
             {
-                HostingUnit unit = new HostingUnit()
-                {
-                    Owner = owner,
-                    HostingUnitName = hostingUnitName,
-                    Area = area,
-                    SubArea = subArea,
-                    Pool = pool,
-                    Jacuzzi = jacuzzi,
-                    Garden = garden,
-                    ChildrensAttractions = childrensAttractions,
-                    Wifi = wifi,
-                    Parking = parking,
-                    PicturesUris = picturesUris,
-                    Diary = new bool[31, 12] //all false by default
-                };
-                bool success = Dal.AddHostingUnit(unit);
-                if (!success)
-                    throw new ArgumentException("Hosting unit Already exists in the system");
-                unit.Owner.HostingUnitsKeys.Add(unit.HostingUnitKey);
-                unit.Owner.NumHostingUnits++;
+                if (hostingUnit.HostingUnitKey != 0)
+                    throw new ArgumentException("BL: new hosting unit can't have an initialized key");
+                if (hostingUnit.Diary != null)
+                    throw new ArgumentException("BL: new hosting unit can't have an initialized diary");
+
+                hostingUnit.Diary = new bool[31, 12]; //all false by default
+                hostingUnit.PicturesUris = new List<string>();
+                int key = Dal.AddHostingUnit(hostingUnit);
+
+                //update host's hosting units' details
+                hostingUnit.Owner.NumHostingUnits += 1;
+                hostingUnit.Owner.HostingUnitsKeys.Add(key);
+                FullUpdateHostingUnit(GetHostingUnitFromKey(key), hostingUnit);
+
+                Configuration.AddLastUpdateDate(key);
+
+                return key;
             }
             catch (ArgumentException x)
             {
                 throw x;
             }
+        }
+        public void UpdateHostingUnit(HostingUnit unit, HostingUnit newUnit)
+        {
+            if ((newUnit.HostingUnitKey != unit.HostingUnitKey) || (newUnit.Owner != unit.Owner) || (newUnit.Diary != unit.Diary))
+                throw new ArgumentException("BL: one or more of the changed properties cannot be updated in this method");
+            Dal.UpdateHostingUnit(unit, newUnit);
         }
 
         /// <summary>
-        /// updates hosting unit (not including pictures)
+        /// Updates all details of hosting unit, relaying on validitions from other methods using this method
         /// </summary>
         /// <param name="unit"></param>
-        /// <param name="hostingUnitName"></param>
-        /// <param name="area"></param>
-        /// <param name="subArea"></param>
-        /// <param name="pool"></param>
-        /// <param name="jacuzzi"></param>
-        /// <param name="garden"></param>
-        /// <param name="childrensAttractions"></param>
-        /// <param name="wifi"></param>
-        /// <param name="parking"></param>
-        public void UpdateHostingUnit(HostingUnit unit, string hostingUnitName, Area area, String subArea, bool pool, bool jacuzzi, bool garden, bool childrensAttractions, bool wifi, bool parking)
+        /// <param name="newUnit"></param>
+        private void FullUpdateHostingUnit(HostingUnit unit, HostingUnit newUnit)
         {
-            unit.HostingUnitName = hostingUnitName;
-            unit.Area = area;
-            unit.SubArea = subArea;
-            unit.Pool = pool;
-            unit.Jacuzzi = jacuzzi;
-            unit.Garden = garden;
-            unit.ChildrensAttractions = childrensAttractions;
-            unit.Wifi = wifi;
-            unit.Parking = parking;
+            Dal.UpdateHostingUnit(unit, newUnit);
+            UpdateOwnerDetails(newUnit.Owner, newUnit);
         }
         public void DeleteHostingUnit(HostingUnit unit)
         {
-            List<Order> ordersToUnit = OrdersToUnit(unit);
-            var activeOrder = (from o in ordersToUnit
-                               where (o.Status == Status.MailSent) || (o.Status == Status.NotYetApproved)
-                               select o).FirstOrDefault();
-            if (activeOrder != null)
-                throw new InvalidOperationException("Cannot delete unit while there are active orders for it");
+            if(OrdersToUnit(unit).Any(o => (o.Status == Status.MailSent) || (o.Status == Status.NotYetApproved)))
+                throw new InvalidOperationException("BL: Cannot delete unit while there are active orders for it");
             bool success = Dal.DeleteHostingUnit(unit);
             if (!success)
-                throw new ArgumentException("Requested hosting unit does not exist in the system");
+                throw new ArgumentException("BL: Requested hosting unit does not exist in the system");
+            Configuration.RemoveLastUpdateDate(unit.HostingUnitKey);
             unit.Owner.NumHostingUnits--;
             unit.Owner.HostingUnitsKeys.Remove(unit.HostingUnitKey);
+            UpdateOwnerDetails(unit.Owner, unit);
         }
         public void ChangeOwner(HostingUnit unit, Host owner)
         {
+            //Updates cloned Host, then updates the actual host's details in the system using the hosting unit
             unit.Owner.NumHostingUnits--;
             unit.Owner.HostingUnitsKeys.Remove(unit.HostingUnitKey);
+            UpdateOwnerDetails(unit.Owner, unit);
+
+            //Updates cloned unit's owner to the new host, then updates the actual hosting unit's and host's details
             unit.Owner = owner;
+            if (owner.HostingUnitsKeys == null)
+                owner.HostingUnitsKeys = new List<int>();
+            Dal.UpdateHostingUnit(unit, unit); //key stayed the same, so we can send the same unit twice
             unit.Owner.NumHostingUnits++;
             unit.Owner.HostingUnitsKeys.Add(unit.HostingUnitKey);
+            UpdateOwnerDetails(unit.Owner, unit);
         }
-        public void ChangeOwner(HostingUnit unit, string hostKey, string privateName, string familyName, string phoneNumber, string mailAddress, BankBranch bankBranchDetails, string bankAccountNumber, bool collectionClearance, string password)
+        private void UpdateDiary(HostingUnit hostingUnit, DateTime entryDate, int numDays)
         {
-            Host newHost;
-            try
+            //Update Diary to hold data of past month and the next 11
+            DateTime lastUpdate = Configuration.GetLastUpdateDate(hostingUnit.HostingUnitKey);
+            int outdatedMonths = ((DateTime.Now.Year - lastUpdate.Year) * 12) + DateTime.Now.Month - lastUpdate.Month;
+            for (int i = 0; i < outdatedMonths; i++)
             {
-                newHost = new Host()
+                int month = DateTime.Now.AddMonths(-2 - i).Month; 
+                for (int j = 0; j < 31; j++)
                 {
-                    HostKey = hostKey,
-                    PrivateName = privateName,
-                    FamilyName = familyName,
-                    PhoneNumber = phoneNumber,
-                    MailAddress = mailAddress,
-                    BankBranchDetails = bankBranchDetails,
-                    BankAccountNumber = bankAccountNumber,
-                    CollectionClearance = collectionClearance,
-                    Password = password
-                };
+                    hostingUnit.Diary[j, month] = false;
+                }
             }
-            catch (ArgumentException x)
-            {
-                throw x;
-            }
-            unit.Owner.NumHostingUnits--;
-            unit.Owner.HostingUnitsKeys.Remove(unit.HostingUnitKey);
-            unit.Owner = newHost;
-            unit.Owner.NumHostingUnits = 1;
-            unit.Owner.HostingUnitsKeys = new List<int> { unit.HostingUnitKey };
-        }
-        public void UpdateDiary(HostingUnit hostingUnit, DateTime entryDate, int numDays)
-        {
+            Configuration.UpdateLastUpdateDate(hostingUnit.HostingUnitKey);
+
+            //Update requested order dates
             if (!IsAvailable(hostingUnit, entryDate, numDays))
-                throw new ArgumentOutOfRangeException("Requested dates unavailable");
+                throw new ArgumentOutOfRangeException("BL: Requested dates unavailable");
             DateTime date = entryDate;
-            for (int i = 0; i < numDays - 1; i++)
+            for (int i = 0; i < numDays; i++)
             {
                 hostingUnit.Diary[date.Day - 1, date.Month - 1] = true;
-                date.AddDays(1);
+                date = date.AddDays(1);
             }
+            Dal.UpdateHostingUnit(hostingUnit, hostingUnit); //key stayed the same, so we can send the same unit twice
         }
-        public void UpdateOwner(Host owner, string privateName, string familyName, string phoneNumber, string mailAddress, BankBranch bankBranchDetails, string bankAccountNumber, bool collectionClearance, string password)
+        public void UpdateOwnerDetails(Host newOwner, HostingUnit ownersUnit)
         {
-            owner.PrivateName = privateName;
-            owner.FamilyName = familyName;
-            owner.PhoneNumber = phoneNumber;
-            owner.MailAddress = mailAddress;
-            owner.BankBranchDetails = bankBranchDetails;
-            owner.BankAccountNumber = bankAccountNumber;
-            owner.Password = password;
-            if ((collectionClearance == false) && (owner.CollectionClearance == true))
+            if ((newOwner.CollectionClearance == false) && (ownersUnit.Owner.CollectionClearance == true))
             {
                 var orders = Dal.GetOrders();
                 foreach (var o in orders)
                 {
                     if ((o.Status == Status.MailSent) || (o.Status == Status.NotYetApproved))
                     {
-                        if (OrderBelongsTo(owner, o))
-                            throw new InvalidOperationException("Cannot change collection clearance to false while host has active orders");
+                        if (OrderBelongsTo(ownersUnit.Owner, o))
+                            throw new InvalidOperationException("BL: Cannot change collection clearance to false while host has active orders");
                     }
                 }
             }
-            owner.CollectionClearance = collectionClearance;
-
+            if (newOwner.HostKey != ownersUnit.Owner.HostKey)
+                throw new InvalidOperationException("BL: Cannot change host's id");
+            ownersUnit.Owner = newOwner;
+            //Updates host's details in all his hosting units
+            foreach (var key in newOwner.HostingUnitsKeys)
+            {
+                HostingUnit u = GetHostingUnitFromKey(key);
+                u.Owner = newOwner;
+                Dal.UpdateHostingUnit(u, u);
+            }
         }
-        private HostingUnit GetHostingUnitFromKey(int key)
+        public HostingUnit GetHostingUnitFromKey(int key)
         {
-            var hostingUnits = Dal.GetHostingUnits();
-            var unit = (from hu in hostingUnits
-                        where hu.HostingUnitKey == key
-                        select hu).FirstOrDefault();
-            if (unit == null)
-                throw new ArgumentException("there is no hosting unit with the requested key");
-            return unit;
+            try
+            {
+                HostingUnit unit = Dal.GetHostingUnits().Where(hu => hu.HostingUnitKey == key).SingleOrDefault();
+                if (unit == null)
+                    throw new ArgumentException("BL: there is no hosting unit with the requested key");
+                return unit;
+            }
+            catch (ArgumentException x)
+            {
+                throw x;
+            }
+            catch (InvalidOperationException x)
+            {
+                throw x;
+            }
         }
-        public List<HostingUnit> getHostingUnits()
+        public Host GetHostFromKey(String key)
+        {
+            var hostingUnits = GetHostingUnits();
+            var host = (from hu in hostingUnits
+                        where (hu.Owner.HostKey == key)
+                        select hu.Owner).FirstOrDefault();
+            return host;
+        }
+        public List<HostingUnit> GetHostingUnits()
         {
             return Dal.GetHostingUnits();
         }
-        public void addPictureToUnit(HostingUnit unit, string uri)
+        public void AddPicturesToUnit(HostingUnit unit, List<string> uris)
         {
-            unit.PicturesUris.Add(uri);
+            foreach (var uri in uris)
+            {
+                unit.PicturesUris.Add(uri);
+            }
+            Dal.UpdateHostingUnit(unit, unit); //key stayed the same, so we can send the same unit twice
         }
-        public void removePictureFromUnit(HostingUnit unit, string uri)
+        public void RemovePicturesFromUnit(HostingUnit unit, List<string> uris)
         {
-            if (unit.PicturesUris.Contains(uri))
-                unit.PicturesUris.Remove(uri);
-            else
-                throw new ArgumentException("uri does not exist");
+            foreach (var uri in uris)
+            {
+                if (unit.PicturesUris.Contains(uri))
+                    unit.PicturesUris.Remove(uri);
+                else
+                    throw new ArgumentException("BL: one of the requested uris does not exist");
+            }
+            Dal.UpdateHostingUnit(unit, unit); //key stayed the same, so we can send the same unit twice
         }
+
         #endregion
 
         #region Order methods
-        public void CreateOrder(HostingUnit hostingUnit, GuestRequest guestRequest)
+
+        public int CreateOrder(HostingUnit hostingUnit, GuestRequest guestRequest)
         {
             if (!IsAvailable(hostingUnit, guestRequest.EntryDate, (guestRequest.ReleaseDate - guestRequest.EntryDate).Days))
             {
-                throw new ArgumentOutOfRangeException("Requested dates in order are already booked");
+                throw new ArgumentOutOfRangeException("BL: Requested dates in order are already booked");
             }
             Order order = new Order()
             {
@@ -317,14 +271,14 @@ namespace BL
                 CreateDate = DateTime.Now.Date
             };
             SendMail(order);
-            Dal.AddOrder(order);
+            return Dal.AddOrder(order);
         }
         public void UpdateOrder(Status status, Order order)
         {
             HostingUnit unit = GetHostingUnitFromKey(order.HostingUnitKey);
             GuestRequest request = GetGuestRequestFromKey(order.GuestRequestKey);
-            if ((order.Status == Status.CloseByApp) || (order.Status == Status.CloseByClient))
-                throw new InvalidOperationException("Can't change order's status after the order was closed");
+            if ((GetOrderFromKey(order.OrderKey).Status == Status.CloseByApp) || (GetOrderFromKey(order.OrderKey).Status == Status.CloseByClient))
+                throw new InvalidOperationException("BL: Can't change order's status after the order was closed");
             if (status == Status.CloseByClient)
             {
                 UpdateDiary(unit, request.EntryDate, NumDaysInRange(request.EntryDate, request.ReleaseDate));
@@ -332,15 +286,36 @@ namespace BL
             }
             Dal.UpdateOrder(order, status);
             Dal.UpdateRequest(request, status);
-            foreach (var o in OrdersToGuest(request))
+            if (status == Status.CloseByClient)
             {
-                if (o.OrderKey != order.OrderKey)
-                    UpdateOrder(Status.CloseByApp, o);
+                foreach (var o in OrdersToGuest(request))
+                {
+                    if (o.OrderKey != order.OrderKey)
+                        UpdateOrder(Status.CloseByApp, o);
+                }
             }
         }
-        public List<Order> getOrders()
+        public List<Order> GetOrders()
         {
             return Dal.GetOrders();
+        }
+        public Order GetOrderFromKey(int key)
+        {
+            try
+            {
+                Order order = Dal.GetOrders().Where(o => o.OrderKey == key).SingleOrDefault();
+                if (order == null)
+                    throw new ArgumentException("BL: there is no order with the requested key");
+                return order;
+            }
+            catch (ArgumentException x)
+            {
+                throw x;
+            }
+            catch (InvalidOperationException x)
+            {
+                throw x;
+            }
         }
         private void SendMail(Order order)
         {
@@ -356,36 +331,35 @@ namespace BL
                 GuestRequest request = GetGuestRequestFromKey(order.GuestRequestKey);
                 String guestMail = request.MailAddress;
                 string Mail = "Dear " + request.PrivateName + ",\nI'm happy to invite you to my hosting unit, "
-                    + unit.HostingUnitName + ", that should suit your needs.\nfor more details, please contact" +
+                    + unit.HostingUnitName + ", that should suit your needs.\nFor more details, please contact" +
                     " me at " + hostMail + " or " + hostPhoneNumber + ".\nThank you, and have a great day!\n" +
                     hostName;
                 //network query here
                 //add pictures of the unit to the mail
-                Console.WriteLine("Mail was sent to guest");
+                Console.WriteLine("Mail was sent to guest\n");
                 order.Status = Status.MailSent;
+                order.OrderDate = DateTime.Now.Date;
             }
             catch (ArgumentException)
             {
-                throw new ArgumentException("guest request or hosting unit don't exist in the system");
+                throw new ArgumentException("BL: guest request or hosting unit don't exist in the system");
             }
         }
+
         #endregion
 
         #region Bank Branch methods
+
         public List<BankBranch> GetBankBranches()
         {
             return Dal.GetBankBranches();
         }
+
         #endregion
 
         #region Queries
-            /// <summary>
-            /// finds all units available at a certain time range
-            /// </summary>
-            /// <param name="date">Entry date</param>
-            /// <param name="numDays">number of days in range</param>
-            /// <returns></returns>
-            public List<HostingUnit> AvailableHostingUnits(DateTime date, int numDays)
+
+        public List<HostingUnit> AvailableHostingUnits(DateTime date, int numDays)
         {
             List<HostingUnit> hostingUnits = Dal.GetHostingUnits();
             var availableUnits = from hu in hostingUnits
@@ -395,9 +369,9 @@ namespace BL
         }
         private bool IsAvailable(HostingUnit hu, DateTime date, int numDays)
         {
-            for (int i = 0; i < numDays-1; i++)//assuming numDays means the nights in between
+            for (int i = 0; i < numDays - 1; i++)//assuming numDays means the nights in between
             {
-                if (hu.Diary[date.Day-1,date.Month-1])
+                if (hu.Diary[date.Day - 1, date.Month - 1])
                 {
                     return false;
                 }
@@ -405,7 +379,14 @@ namespace BL
             }
             return true;
         }
-        private bool OrderBelongsTo(Host owner,Order o)
+       
+        /// <summary>
+        /// Checks weather an order was created by a certain host
+        /// </summary>
+        /// <param name="owner"></param>
+        /// <param name="o"></param>
+        /// <returns></returns>
+        private bool OrderBelongsTo(Host owner, Order o)
         {
             foreach (var hostingUnitKey in owner.HostingUnitsKeys)
             {
@@ -414,7 +395,7 @@ namespace BL
             }
             return false;
         }
-        public List<Order> OrdersToGuest(GuestRequest request)
+        private List<Order> OrdersToGuest(GuestRequest request)
         {
             var orders = Dal.GetOrders();
             var guestOrders = (from o in orders
@@ -422,7 +403,7 @@ namespace BL
                                select o);
             return guestOrders.ToList();
         }
-        public List<Order> OrdersToUnit(HostingUnit unit)
+        private List<Order> OrdersToUnit(HostingUnit unit)
         {
             var orders = Dal.GetOrders();
             var unitOrders = (from o in orders
@@ -430,7 +411,7 @@ namespace BL
                               select o);
             return unitOrders.ToList();
         }
-        public List<Order> OrderOlderThan(int numDays)
+        public List<Order> OrdersOlderThan(int numDays)
         {
             var orders = Dal.GetOrders();
             var oldOrders = from o in orders
@@ -438,27 +419,27 @@ namespace BL
                             select o;
             return oldOrders.ToList();
         }
-        public int NumOrdersToCustomer(GuestRequest request)
+        public int NumOrdersToGuest(GuestRequest request)
         {
             var orders = Dal.GetOrders();
-            var customerOrders = from o in orders
-                                 where o.GuestRequestKey == request.GuestRequestKey
-                                 select o;
-            return customerOrders.Count();
+            var guestOrders = from o in orders
+                              where o.GuestRequestKey == request.GuestRequestKey
+                              select new { o.OrderKey };
+            return guestOrders.Count();
         }
         public int NumOrdersToUnit(HostingUnit unit)
         {
             var orders = Dal.GetOrders();
             var unitOrders = from o in orders
                              where o.HostingUnitKey == unit.HostingUnitKey
-                             select o;
+                             select new { o.OrderKey };
             return unitOrders.Count();
         }
         public int NumDaysInRange(DateTime firstDate, DateTime secondDate = default)
         {
             if (secondDate == default)
                 return (DateTime.Now.Date - firstDate.Date).Days;
-            return (secondDate.Date - firstDate.Date).Days;
+            return (secondDate.Date - firstDate.Date).Days + 1;
         }
         public List<GuestRequest> GuestRequestsMeetingCondition(condition condition)
         {
@@ -468,40 +449,40 @@ namespace BL
                         select gr;
             return rqsts.ToList();
         }
-
-        public IEnumerable<IGrouping<int, Host>> GroupHostsByNumUnits(IEnumerable<HostingUnit> hostingUnits)
+        
+        public IEnumerable<IGrouping<int,String>> GroupHostsByNumUnits(List<HostingUnit> hostingUnits)
         {
-            var hosts = GroupUnitsByHosts(hostingUnits);
+            var hosts = (GroupUnitsByHosts(hostingUnits));
             var grouped = from h in hosts
-                          group h.Key by h.Key.NumHostingUnits;
+                          group h.Key by GetHostFromKey(h.Key).NumHostingUnits;
             return grouped;
-
         }
-        public IEnumerable<IGrouping<Area, GuestRequest>> GroupRequestsByArea(IEnumerable<GuestRequest> guestRequests)
+        public IEnumerable<IGrouping<Area, GuestRequest>> GroupRequestsByArea(List<GuestRequest> guestRequests)
         {
             var grouped = from rqst in guestRequests
                           group rqst by rqst.Area;
             return grouped;
         }
-        public IEnumerable<IGrouping<int, GuestRequest>> GroupRequestsByNumGuests(IEnumerable<GuestRequest> guestRequests)
+        public IEnumerable<IGrouping<int, GuestRequest>> GroupRequestsByNumGuests(List<GuestRequest> guestRequests)
         {
             var grouped = from rqst in guestRequests
                           let numGuests = rqst.Adults + rqst.Children
                           group rqst by numGuests;
             return grouped;
         }
-        public IEnumerable<IGrouping<Area, HostingUnit>> GroupUnitsByArea(IEnumerable<HostingUnit> hostingUnits)
+        public IEnumerable<IGrouping<Area, HostingUnit>> GroupUnitsByArea(List<HostingUnit> hostingUnits)
         {
             var grouped = from unit in hostingUnits
                           group unit by unit.Area;
             return grouped;
         }
-        public IEnumerable<IGrouping<Host, HostingUnit>> GroupUnitsByHosts(IEnumerable<HostingUnit> hostingUnits)
+        public IEnumerable<IGrouping<String, HostingUnit>> GroupUnitsByHosts(List<HostingUnit> hostingUnits)
         {
             var grouped = from unit in hostingUnits
-                          group unit by unit.Owner;
+                          group unit by unit.Owner.HostKey;
             return grouped;
         }
+        
         #endregion
     }
 }

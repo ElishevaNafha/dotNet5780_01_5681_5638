@@ -12,46 +12,39 @@ namespace BE
     {
         public int HostingUnitKey { get; set; }
         public int GuestRequestKey { get; set; }
-        public int OrderKey 
-        {
-            get { return OrderKey; }
-            set
-            {
-                if (OrderKey == 0)
-                    OrderKey = Configuration.serialOrder++;
-            }
-        }
+        public int OrderKey { get; set;}
+        private Status status;
         public Status Status
         {
-            get { return Status; }
+            get { return status; }
             set
             {
                 //enum checks taken from https://www.c-sharpcorner.com/code/1307/validate-enum-value-in-c-sharp.aspx
                 bool success = Enum.IsDefined(typeof(Status), value);
                 if (success)
-                    Status = value;
+                    status = value;
                 else
                     throw new InvalidEnumArgumentException("Non valid status");
             }
         }
+        private DateTime createDate;
         public DateTime CreateDate
         {
-            get { return CreateDate; }
+            get { return createDate; }
             set
             {
                 if (value > DateTime.Now)
                     throw new ArgumentException("Non valid create date");
-                CreateDate = value;
+                createDate = value;
             }
         }
+        private DateTime orderDate;
         public DateTime OrderDate
         {
-            get { return OrderDate; }
+            get { return orderDate; }
             set
             {
-                if (value < CreateDate)
-                    throw new ArgumentException("Non valid order date");
-                OrderDate = value;
+                orderDate = value;
             }
         }
         public override string ToString()

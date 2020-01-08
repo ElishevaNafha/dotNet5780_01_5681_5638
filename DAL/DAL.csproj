@@ -41,6 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BE_Extensions.cs" />
     <Compile Include="Dal_imp.cs" />
     <Compile Include="FactorySingletonDal.cs" />
     <Compile Include="IDAL.cs" />
